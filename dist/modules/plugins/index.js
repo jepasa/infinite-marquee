@@ -1,0 +1,53 @@
+/** @license Proprietária - Todos os direitos reservados */
+(function (root, factory) {
+    if (typeof module === 'object' && module.exports) {
+        const builtinRuntime = require('./runtime.js');
+        module.exports = factory([builtinRuntime]);
+    }
+    else {
+        root.InfiniteMarqueePlugins = factory([root.IMPluginRuntime]);
+    }
+})(typeof self !== 'undefined' ? self : this, function (builtinModules) {
+    'use strict';
+    var registry = Object.create(null);
+    function normalizeName(name) {
+        return typeof name === 'string' ? name.trim() : '';
+    }
+    function register(name, pluginModule) {
+        var normalizedName = normalizeName(name);
+        if (!normalizedName) {
+            throw new TypeError('Infinite Marquee: nome de plugin inválido.');
+        }
+        registry[normalizedName] = pluginModule;
+        return api;
+    }
+    function get(name) {
+        var normalizedName = normalizeName(name);
+        return normalizedName ? registry[normalizedName] : undefined;
+    }
+    function has(name) {
+        return !!get(name);
+    }
+    function list() {
+        return Object.keys(registry).sort();
+    }
+    function all() {
+        return Object.assign({}, registry);
+    }
+    var api = {
+        register: register,
+        get: get,
+        has: has,
+        list: list,
+        all: all,
+    };
+    (Array.isArray(builtinModules) ? builtinModules : []).forEach(function (definition) {
+        if (!definition || typeof definition !== 'object')
+            return;
+        var name = typeof definition.name === 'string' ? definition.name.trim() : '';
+        if (!name)
+            return;
+        register(name, definition);
+    });
+    return api;
+});
